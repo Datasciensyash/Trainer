@@ -1032,11 +1032,13 @@ class Trainer:
                 # https://nvidia.github.io/apex/advanced.html?highlight=accumulate#backward-passes-with-multiple-optimizers
                 with amp.scale_loss(loss_dict["loss"], optimizer) as scaled_loss:
                     scaled_loss.backward()
+                    self.callbacks.on_after_backward(self)
                 self.callbacks.before_gradient_clipping(self)
                 grad_norm = torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), grad_clip)
             else:
                 # model optimizer step in mixed precision mode
                 scaler.scale(loss_dict["loss"]).backward()
+                self.callbacks.on_after_backward(self)
                 # gradient accumulation
                 if step_optimizer:
                     if grad_clip > 0:
@@ -1054,6 +1056,7 @@ class Trainer:
             self.callbacks.before_backward_pass(self, loss_dict)
             # main model optimizer step
             loss_dict["loss"].backward()
+            self.callbacks.on_after_backward(self)
             # gradient accumulation
             if step_optimizer:
                 self.callbacks.before_gradient_clipping(self)

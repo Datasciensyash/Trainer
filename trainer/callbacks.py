@@ -10,6 +10,7 @@ class TrainerCallback:
         self.callbacks_on_train_step_start = []
         self.callbacks_on_train_step_end = []
         self.callbacks_on_keyboard_interrupt = []
+        self.callbacks_on_after_backward = []
 
     def parse_callbacks_dict(self, callbacks_dict: Dict[str, Callable]) -> None:
         for key, value in callbacks_dict.items():
@@ -27,6 +28,8 @@ class TrainerCallback:
                 self.callbacks_on_train_step_end.append(value)
             elif key == "on_keyboard_interrupt":
                 self.callbacks_on_keyboard_interrupt.append(value)
+            elif key == "on_after_backward":
+                self.callbacks_on_after_backward.append(value)
             else:
                 raise ValueError(f"Invalid callback key: {key}")
 
@@ -83,6 +86,10 @@ class TrainerCallback:
         if self.callbacks_on_epoch_start:
             for callback in self.callbacks_on_epoch_start:
                 callback(trainer)
+
+    def on_after_backward(self, trainer) -> None:
+        for callback in self.callbacks_on_after_backward:
+            callback(trainer)
 
     def on_epoch_end(self, trainer) -> None:
         if hasattr(trainer.model, "module"):
